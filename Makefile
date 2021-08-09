@@ -1,4 +1,5 @@
-SRC	=	src/Main.cpp
+SRC	=	src/main.cpp	\
+		src/Game/Game.cpp
 
 OBJ =	$(SRC:.cpp=.o)
 
@@ -11,12 +12,10 @@ NAME	=	infiniteMinesweeper
 all:	$(NAME)
 
 $(NAME):	$(OBJ)
-	$(CC) -o $(NAME) $(OBJ) $(CFLAGS) -lsfml-graphics -lsfml-window -lsfml-system
+	$(CC) -o $(NAME) $(OBJ) $(CFLAGS) -lsfml-graphics -lsfml-window -lsfml-system 
 
 clean:	
 		rm -f $(OBJ)
 
 fclean: clean
 		rm -f $(NAME)
-
-re:	fclean all
