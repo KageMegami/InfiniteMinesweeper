@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include "Map.hpp"
 
 class Game {
 
@@ -7,7 +8,9 @@ public:
     ~Game();
 
 private:
+    void start();
     sf::RenderWindow _window;
     bool _moveCamera;
-    void start();
+    Map _map;
+    bool _isGameOver;
 };

@@ -1,5 +1,7 @@
 SRC	=	src/main.cpp	\
-		src/Game/Game.cpp
+		src/Game/Game.cpp	\
+		src/Game/Map.cpp	\
+		src/Game/Chunk.cpp	\
 
 OBJ =	$(SRC:.cpp=.o)
 
@@ -19,3 +21,5 @@ clean:
 
 fclean: clean
 		rm -f $(NAME)
+
+re: fclean all
