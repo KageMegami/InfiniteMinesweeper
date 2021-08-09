@@ -2,9 +2,11 @@
 
 #include <iostream>
 
-Game::Game(): _window(sf::VideoMode(1280, 720), "Infinite Minesweeper!"), _moveCamera(false)
+Game::Game(): _window(sf::VideoMode(1920, 1080), "Infinite Minesweeper!"), _moveCamera(false), _isGameOver(false)
 {
+    _window.setFramerateLimit(30);
     start();
+
 }
     
 Game::~Game()
@@ -13,24 +15,28 @@ Game::~Game()
 
 void Game::start() {
 
-    sf::CircleShape shape(100.f);
-    shape.setFillColor(sf::Color::Green);
 
     sf::Vector2f oldPos, newPos;
-
-    sf::View camera(sf::Vector2f(640,360), sf::Vector2f(1280, 720));
-    _window.setView(camera);
     bool moved = false;
-
+    // sf::Texture texture;
+    // texture.loadFromFile("./assets/gameover.png");
+    // sf::Sprite gameover(texture);
+    // gameover.setScale(0.5, 0.5);
+    sf::View camera(sf::Vector2f(960,540), sf::Vector2f(1920, 1080));
+    _window.setView(camera);
 
     while (_window.isOpen()) {
         sf::Event event;
         while (_window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                _window.close();
+            if (_isGameOver)
+                continue;
             if (event.type == sf::Event::MouseButtonPressed) {
                 oldPos.x = event.mouseButton.x;
                 oldPos.y = event.mouseButton.y;
                 moved = false;
-                if (event.mouseButton.button == sf::Mouse::Left) {
+                if (event.mouseButton.button == sf::Mouse::Right) {
                     _moveCamera = true;
                 }
             }
@@ -38,24 +44,20 @@ void Game::start() {
              if (_moveCamera && event.type == sf::Event::MouseMoved) {
                 moved = true;
                 newPos = sf::Vector2f(event.mouseMove.x, event.mouseMove.y);
-                camera.setCenter(camera.getCenter() + newPos - oldPos);
+                camera.setCenter(camera.getCenter() - (newPos - oldPos));
                 oldPos = newPos;
                 _window.setView(camera);
             }
 
             if (event.type == sf::Event::MouseButtonReleased) {
                 _moveCamera = false;
-                if (moved == false)
-                    std::cout << "click" << std::endl;
+                if (moved == false) {
+                    _isGameOver = _map.click(_window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y)), event.mouseButton.button);
+                }
             }
-
-
-            if (event.type == sf::Event::Closed)
-                _window.close();
         }
-
         _window.clear();
-        _window.draw(shape);
+        _map.draw(_window, camera.getCenter() - sf::Vector2f(640,360), _isGameOver);
         _window.display();
     }
 }
