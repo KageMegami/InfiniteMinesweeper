@@ -14,7 +14,7 @@ NAME	=	infiniteMinesweeper
 all:	$(NAME)
 
 $(NAME):	$(OBJ)
-	$(CC) -o $(NAME) $(OBJ) $(CFLAGS) -lsfml-graphics -lsfml-window -lsfml-system 
+	$(CC) -o $(NAME) $(OBJ) $(CFLAGS) -lsfml-graphics -lsfml-window -lsfml-system
 
 clean:	
 		rm -f $(OBJ)

@@ -1,7 +1,17 @@
 #include "Map.hpp"
+#include <math.h>
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
 
-Map::Map():_chunk(0, sf::Vector2f(0,0))
+Map::Map()
 {
+    srand(time(NULL));
+
+    create_new_chunk(sf::Vector2i(0,0));
+
+
+    // load tiles' textures
     _textures[0].loadFromFile("./assets/0.png");
     _textures[1].loadFromFile("./assets/1.png");
     _textures[2].loadFromFile("./assets/2.png");
@@ -15,7 +25,7 @@ Map::Map():_chunk(0, sf::Vector2f(0,0))
     _textures[10].loadFromFile("./assets/mine.png");
     _textures[11].loadFromFile("./assets/clickedMine.png");
     _textures[12].loadFromFile("./assets/unknow.png");
-
+    //create tiles' sprites
     _sprites[0].setTexture(_textures[0]);
     _sprites[1].setTexture(_textures[1]);
     _sprites[2].setTexture(_textures[2]);
@@ -30,20 +40,162 @@ Map::Map():_chunk(0, sf::Vector2f(0,0))
     _sprites[11].setTexture(_textures[11]);
     _sprites[12].setTexture(_textures[12]);
 
+    //scale tiles' sprites
     for (int i = 0; i < 13; i += 1)
         _sprites[i].setScale(0.25, 0.25);
 }
 
 Map::~Map()
 {
+}    
+
+
+
+int Map::get_chunk_id(sf::Vector2i coord)
+{
+    for (auto it = _ids.begin(); it != _ids.end(); ++it) {
+        if (coord == std::get<0>(*it))
+            return (std::get<1>(*it));
+    }
+    return (-1);
+}
+
+int Map::dist(sf::Vector2i vec1, sf::Vector2i vec2) {
+    //calcul euclidian distance between 2 vectors
+    sf::Vector2i tmp = vec1 - vec2;
+    return sqrt(pow(tmp.x, 2) + pow(tmp.y, 2));
 }
 
 void Map::draw(sf::RenderWindow &window, sf::Vector2f camera, bool over) {
-    _chunk.draw(window, _sprites, over);
+    sf::Vector2i coord;
+    coord.x = (int)camera.x / 512;
+    coord.y = (int)camera.y / 512;
     
+    // draw all the chunk near the camera view
+    for (auto it = _ids.begin(); it != _ids.end(); ++it) {
+        if (dist(coord, std::get<0>(*it)) < 4) {
+            if (_chunks.find(std::get<1>(*it)) != _chunks.end())
+                _chunks[std::get<1>(*it)]->draw(window, _sprites, over);
+        }
+    }
+    
+}
+
+bool Map::reveal(sf::Vector2i chunk, sf::Vector2i coord) {
+    //search for the chunked to reveal the tile in
+    int id = get_chunk_id(coord);
+    
+    // chunk not found
+    if (_chunks.find(id) == _chunks.end())
+        return false;
+    for (int x = -1; x <  2; x += 1) {
+        for (int y = -1; y < 2; y += 1) {
+            if (get_chunk_id(sf::Vector2i(x + chunk.x, y + chunk.y)) == -1)
+                create_new_chunk(sf::Vector2i(x + chunk.x, y + chunk.y));
+        }
+    }
+    return _chunks[id]->reveal(coord.x, coord.y);
 }
 
 bool Map::click(sf::Vector2f target,sf::Mouse::Button button)
 {
-    return _chunk.click(target, button);
+    sf::Vector2i chunk_coord, tiles_coord;
+    // convert coord
+    chunk_coord.x = target.x < 0 ? (int)target.x / 512 - 1 : (int)target.x / 512;
+    chunk_coord.y = target.y < 0 ? (int)target.y / 512 - 1 : (int)target.y / 512;
+    tiles_coord.x = (int)target.x % 512;
+    tiles_coord.y = (int)target.y % 512;
+
+    //search for the clicked chunked
+    int id = get_chunk_id(chunk_coord);
+    // chunk not found
+    if (_chunks.find(id) == _chunks.end())
+        return false;
+    for (int x = -1; x <  2; x += 1) {
+        for (int y = -1; y < 2; y += 1) {
+            if (get_chunk_id(sf::Vector2i(x + chunk_coord.x, y + chunk_coord.y)) == -1)
+                create_new_chunk(sf::Vector2i(x + chunk_coord.x, y + chunk_coord.y));
+        }
+    }
+    return _chunks[id]->click(tiles_coord, button);
+}
+
+
+void Map::load_chunk_in_generator(int id, int x, int y)
+{
+    if (_chunks.find(id) == _chunks.end())
+        return;
+    // load tiles with an offset
+    auto &tiles = _chunks[id]->_tiles;
+    for (int i = 0; i < 16; i += 1) {
+        for (int j = 0; j < 16; j += 1) {
+            _generator[i + x][j + y] = tiles[i + j * 16];
+        }
+    }
+}
+
+void Map::update_tiles(int id, int x, int y)
+{
+    if (_chunks.find(id) == _chunks.end())
+        return;
+    // update tiles in chunk
+    for (int i = 0; i < 16; i += 1) {
+        for (int j = 0; j < 16; j += 1) {
+            _chunks[id]->_tiles[i + j * 16] = _generator[i + x][j + y];
+        }
+    }
+}
+
+
+void Map::create_new_chunk(sf::Vector2i coord) {
+    //reset generator map
+    for (int i = 0; i < 48; i += 1) {
+        for (int j = 0; j < 48; j += 1)
+            _generator[i][j] = 0;
+    }
+
+    //create new chunk
+    int new_id = _ids.size();
+
+    _chunks.emplace(new_id, new Chunk(0, coord, [&](sf::Vector2i chunk, sf::Vector2i coord2){return Map::reveal(chunk, coord2);}));
+    _ids.push_back(std::make_tuple(coord, new_id));
+    
+    //load the chunk's tiles in the map generator
+    for (int x = -1; x <  2; x += 1) {
+        for (int y = -1; y < 2; y += 1) {
+            int id = get_chunk_id(sf::Vector2i(x + coord.x, y + coord.y));
+            load_chunk_in_generator(id, (x + 1) * 16, (y + 1) * 16);
+        }
+    }
+    for (int i = 0; i < 40; i += 1) {
+        int x = std::rand() % 16 + 16;
+        int y = std::rand() % 16 + 16;
+        //if already is a mine
+        if ((_generator[x][y] & 0b00010000) != 0) {
+            i -= 1;
+            continue;
+        }
+        _generator[x][y] |= 0b00010000;
+    }
+
+    //count and update mines indicator
+    for (int i = 15; i <= 32; i += 1) {
+        for (int j = 15; j <= 32; j += 1) {
+            _generator[i][j] &= 0b11110000;
+            for (int x = -1; x < 2; x += 1) {
+                for (int y = -1; y < 2; y += 1) {
+                    if ((_generator[x + i][y + j] & 0b00010000) != 0)
+                        _generator[i][j] += 1;
+                }
+            }
+        }
+    }
+
+    // update tiles in chunks
+    for (int x = -1; x < 2; x += 1) {
+        for (int y =  -1; y < 2; y += 1) {
+            int id = get_chunk_id(sf::Vector2i(x + coord.x, y + coord.y));
+            update_tiles(id, (x + 1) * 16, (y + 1) * 16);
+        }
+    }
 }
