@@ -53,6 +53,7 @@ Map::~Map()
 
 int Map::get_chunk_id(sf::Vector2i coord)
 {
+    //get the chunk id from its coordinates
     for (auto it = _ids.begin(); it != _ids.end(); ++it) {
         if (coord == std::get<0>(*it))
             return (std::get<1>(*it));
@@ -117,7 +118,6 @@ bool Map::click(sf::Vector2f target,sf::Mouse::Button button)
     chunk_coord.y = target.y < 0 ? (int)target.y / 512 - 1 : (int)target.y / 512;
     tiles_coord.x = target.x < 0 ? (int)target.x % 512 + 512 : (int)target.x % 512;
     tiles_coord.y = target.y < 0 ? (int)target.y % 512 + 512 : (int)target.y % 512;
-    std::cout << tiles_coord.x << " " << tiles_coord.y << std::endl;
 
     //search for the clicked chunked
     int id = get_chunk_id(chunk_coord);

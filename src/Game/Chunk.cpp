@@ -81,21 +81,12 @@ bool Chunk::click(sf::Vector2i pos, sf::Mouse::Button button)
         _tiles[pos.x + pos.y * 16] ^= FLAG; 
         return false;
     }
-    // Can't reveal flaged tile
-    if ((_tiles[pos.x + pos.y * 16] & FLAG) != 0)
-        return false;
 
-    // if it's a mine
-    if ((_tiles[pos.x + pos.y * 16] & MINE) != 0) {
-        _tiles[pos.x + pos.y * 16] &= 0b11011111;
-        return true;
-    }
     //if revealed and not 0;
-    if ((_tiles[pos.x + pos.y * 16] & REVEALED) == 0 && (_tiles[pos.x + pos.y * 16] & MINES_AROUND) == 0)
-        return false; // check if enough flag aroud
+    if ((_tiles[pos.x + pos.y * 16] & REVEALED) == 0 && (_tiles[pos.x + pos.y * 16] & MINES_AROUND) != 0)
+        return check_flag(pos.x, pos.y);
     // else reveal
-    reveal(pos.x, pos.y);
-    return false;
+    return reveal(pos.x, pos.y);
 }
 
 bool Chunk::reveal(int x, int y) {
@@ -104,6 +95,11 @@ bool Chunk::reveal(int x, int y) {
         return false;
     //reveal
     _tiles[x + y * 16] &= 0b11011111;
+   
+    // if it's a mine
+    if ((_tiles[x + y * 16] & MINE) != 0)
+        return true;
+    
     if ((_tiles[x + y * 16] & MINES_AROUND) != 0)
         return false;
 
@@ -124,31 +120,71 @@ bool Chunk::reveal(int x, int y) {
     return false;
 }
 
+bool Chunk::check_flag(int x, int y) {
+    sf::Vector2i chunk, tile;
+    unsigned char flag = 0;
+    bool res = false;
+    
+    //count number of flag around
+    for (int i = x - 1; i < x + 2; i += 1) {
+        for (int j = y - 1; j < y + 2; j += 1) {
+            if (i < 0 || i > 15 || j < 0 || j > 15) {
+                get_coord_in_other_chunk(i, j, chunk, tile);
+                flag += (_get_tile_in_chunk(chunk, tile) & FLAG) >> 6;
+            } else
+                flag += (_tiles[i + j * 16] & FLAG) >> 6;
+        }
+    }
 
-void Chunk::reveal_in_other_chunk(int x, int y) {
-    sf::Vector2i chunk = _pos;
-    sf::Vector2i tile(x, y);
+    //not good number of flag return
+    if (flag != (_tiles[x + y * 16] & MINES_AROUND))
+        return false;
+
+    // reveal tiles around when enough flags
+    for (int i = x - 1; i < x + 2; i += 1) {
+        for (int j = y - 1; j < y + 2; j += 1) {
+            if (i < 0 || i > 15 || j < 0 || j > 15)
+                res |= reveal_in_other_chunk(i, j);
+            else
+                res |= reveal(i, j);
+        }
+    }
+    return res;
+}
+
+bool Chunk::reveal_in_other_chunk(int x, int y) {
+    sf::Vector2i chunk, tile;
+    
+    //request to reveal a tile in an other chunk
+    get_coord_in_other_chunk(x, y, chunk, tile);
+    return _reveal_in_chunk(chunk, tile);
+}
+
+void Chunk::get_coord_in_other_chunk(int x, int y, sf::Vector2i &chunk, sf::Vector2i &coord) {
+    //calculate the tiles position in an other chunk
+    chunk = _pos;
+    coord = sf::Vector2i(x, y);
 
     if (-1 == x) {
         chunk.x -= 1;
-        tile.x = 15;
+        coord.x = 15;
     }
     if (16 == x) {
         chunk.x += 1;
-        tile.x = 0;
+        coord.x = 0;
     }
     if (-1 == y) {
         chunk.y -= 1;
-        tile.y = 15;
+        coord.y = 15;
         
     }
     if (16 == y) {
         chunk.y += 1;
-        tile.y = 0;
+        coord.y = 0;
     }
-    _reveal_in_chunk(chunk, tile);
 }
 
 unsigned char Chunk::get_tile(sf::Vector2i coord) {
+    //return the requested tile
     return _tiles[coord.x + coord.y * 16];
 }

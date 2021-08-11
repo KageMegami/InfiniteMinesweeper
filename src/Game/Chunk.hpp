@@ -20,8 +20,11 @@ public:
 
     unsigned char _tiles[256];
 private:
-    void reveal_in_other_chunk(int x, int y);
+    bool reveal_in_other_chunk(int x, int y);
     bool addMine(unsigned int pos);
+    bool check_flag(int x, int y);
+    void get_coord_in_other_chunk(int x, int y, sf::Vector2i &chunk, sf::Vector2i &coord);
+
     int _id;
     const sf::Vector2i _pos;
     //first 4 bits for number of mines around

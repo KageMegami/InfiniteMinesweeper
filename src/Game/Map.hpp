@@ -4,7 +4,7 @@
 #include <vector>
 #include <tuple>
 
-#define MINE_PER_CHUNK 40
+#define MINE_PER_CHUNK 30
 
 class Map {
 public:
