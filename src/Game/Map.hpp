@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <tuple>
+#include <fstream>
 
 #define MINE_PER_CHUNK 30
 
@@ -12,6 +13,9 @@ public:
     ~Map();
     void draw(sf::RenderWindow &window, sf::Vector2f camera, bool over);
     bool click(sf::Vector2f target, sf::Mouse::Button button);
+    void save(std::ofstream &file);
+    void load(std::ifstream &file);
+
 private:
     void create_new_chunk(sf::Vector2i coord);
     int dist(sf::Vector2i, sf::Vector2i);
