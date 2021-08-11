@@ -4,6 +4,7 @@
 #include <vector>
 #include <tuple>
 
+#define MINE_PER_CHUNK 30
 
 class Map {
 public:
@@ -15,6 +16,7 @@ private:
     void create_new_chunk(sf::Vector2i coord);
     int dist(sf::Vector2i, sf::Vector2i);
     bool reveal(sf::Vector2i chunk, sf::Vector2i coord);
+    unsigned char get_tile(sf::Vector2i chunk, sf::Vector2i coord);
     int get_chunk_id(sf::Vector2i coord);
     void load_chunk_in_generator(int id, int x, int y);
     void update_tiles(int id, int x, int y);
@@ -24,5 +26,5 @@ private:
     sf::Texture _textures[13];
     std::map<unsigned int, Chunk*> _chunks;
     std::vector<std::tuple<sf::Vector2i, unsigned int>> _ids;
-    char _generator[48][48];
+    unsigned char _generator[48][48];
 };

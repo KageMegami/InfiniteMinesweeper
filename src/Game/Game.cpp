@@ -17,10 +17,6 @@ void Game::start() {
 
     sf::Vector2f oldPos, newPos;
     bool moved = false;
-    // sf::Texture texture;
-    // texture.loadFromFile("./assets/gameover.png");
-    // sf::Sprite gameover(texture);
-    // gameover.setScale(0.5, 0.5);
     sf::View camera(sf::Vector2f(960,540), sf::Vector2f(1920, 1080));
     sf::View camera2(sf::Vector2f(960,540), sf::Vector2f(1920*1.5, 1080*1.5));
     camera2.setViewport(sf::FloatRect(0.7f, 0.7f, 0.3f, 0.3f));
@@ -32,8 +28,6 @@ void Game::start() {
             
             if (event.type == sf::Event::Closed)
                 _window.close();
-            if (_isGameOver)
-                continue;
 
             if (event.type == sf::Event::MouseButtonPressed) {
                 oldPos.x = event.mouseButton.x;
@@ -55,6 +49,8 @@ void Game::start() {
 
             if (event.type == sf::Event::MouseButtonReleased) {
                 _moveCamera = false;
+                if (_isGameOver)
+                    continue;
                 if (moved == false) {
                     _isGameOver = _map.click(_window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y)), event.mouseButton.button);
                 }
