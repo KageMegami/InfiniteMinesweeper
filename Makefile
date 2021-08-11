@@ -1,4 +1,7 @@
-SRC	=	src/Main.cpp
+SRC	=	src/main.cpp	\
+		src/Game/Game.cpp	\
+		src/Game/Map.cpp	\
+		src/Game/Chunk.cpp	\
 
 OBJ =	$(SRC:.cpp=.o)
 
@@ -13,10 +16,10 @@ all:	$(NAME)
 $(NAME):	$(OBJ)
 	$(CC) -o $(NAME) $(OBJ) $(CFLAGS) -lsfml-graphics -lsfml-window -lsfml-system
 
-clean:	rm $(NAME)
+clean:	
+		rm -f $(OBJ)
 
 fclean: clean
-		rm *.o
+		rm -f $(NAME)
 
-re:	fclean
-	all
+re: fclean all
