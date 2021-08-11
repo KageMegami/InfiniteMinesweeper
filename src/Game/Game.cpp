@@ -1,11 +1,10 @@
 #include "Game.hpp"
 #include <iostream>
+#include <fstream>
 
 Game::Game(): _window(sf::VideoMode(1920, 1080), "Infinite Minesweeper!"), _moveCamera(false), _isGameOver(false)
 {
     _window.setFramerateLimit(30);
-    start();
-
 }
     
 Game::~Game()
@@ -17,9 +16,10 @@ void Game::start() {
 
     sf::Vector2f oldPos, newPos;
     bool moved = false;
-    sf::View camera(sf::Vector2f(960,540), sf::Vector2f(1920, 1080));
-    sf::View camera2(sf::Vector2f(960,540), sf::Vector2f(1920*1.5, 1080*1.5));
-    camera2.setViewport(sf::FloatRect(0.7f, 0.7f, 0.3f, 0.3f));
+    sf::View camera(sf::Vector2f(256*0.8,256), sf::Vector2f(1536, 1080));
+    camera.setViewport(sf::FloatRect(0.f, 0.f, 0.8f, 1.f));
+    sf::View camera2(sf::Vector2f(256, 256), sf::Vector2f(1920 * 0.2 * 5, 1080 * 0.3 * 5));
+    camera2.setViewport(sf::FloatRect(0.8f, 0.7f, 0.2f, 0.3f));
     _window.setView(camera);
 
     while (_window.isOpen()) {
@@ -65,4 +65,17 @@ void Game::start() {
         _window.setView(camera);
         _window.display();
     }
+    save();
+}
+
+void Game::save() {
+    std::ofstream file("save.mine", std::ios::out | std::ios::trunc | std::ios::binary);
+    _map.save(file);
+    file.close();
+}
+
+void Game::load(std::string save) {
+    std::ifstream file(save, std::ios::binary);
+    _map.load(file);
+    file.close();
 }
