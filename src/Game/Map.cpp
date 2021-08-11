@@ -98,7 +98,7 @@ bool Map::reveal(sf::Vector2i chunk, sf::Vector2i coord) {
 }
 
 
-char Map::get_tile(sf::Vector2i chunk, sf::Vector2i coord) {
+unsigned char Map::get_tile(sf::Vector2i chunk, sf::Vector2i coord) {
     //search for the chunked to reveal the tile in
     int id = get_chunk_id(chunk);
 

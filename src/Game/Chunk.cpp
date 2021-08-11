@@ -149,6 +149,6 @@ void Chunk::reveal_in_other_chunk(int x, int y) {
     _reveal_in_chunk(chunk, tile);
 }
 
-char Chunk::get_tile(sf::Vector2i coord) {
+unsigned char Chunk::get_tile(sf::Vector2i coord) {
     return _tiles[coord.x + coord.y * 16];
 }
