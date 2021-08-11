@@ -1,13 +1,22 @@
 #include <SFML/Graphics.hpp>
 #include <functional>
+
+#define MINES_AROUND 0b00001111
+#define MINE 0b00010000
+#define REVEALED 0b00100000
+#define FLAG 0b01000000
+
+
 class Chunk {
 public:
-    Chunk(int id, sf::Vector2i pos, std::function<bool(sf::Vector2i,sf::Vector2i)> reveal_in_chunk);
+    Chunk(int id, sf::Vector2i pos, std::function<bool(sf::Vector2i,sf::Vector2i)> reveal_in_chunk,
+    std::function<unsigned char(sf::Vector2i,sf::Vector2i)> get_tile_in_chunk);
     ~Chunk();
     void draw(sf::RenderWindow &window, sf::Sprite (&sprites)[13], bool over);
     bool click(sf::Vector2i pos, sf::Mouse::Button button);
     sf::Vector2i const &getPos() ;
     bool reveal(int x, int y);
+    unsigned char get_tile(sf::Vector2i coord);
 
     unsigned char _tiles[256];
 private:
@@ -20,4 +29,5 @@ private:
     //6th bit for reveal or not
     //7th bit for flag or not
     std::function<bool(sf::Vector2i,sf::Vector2i)> _reveal_in_chunk;
+    std::function<unsigned char(sf::Vector2i,sf::Vector2i)> _get_tile_in_chunk;
 };

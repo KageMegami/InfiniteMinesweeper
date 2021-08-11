@@ -32,8 +32,6 @@ void Game::start() {
             
             if (event.type == sf::Event::Closed)
                 _window.close();
-            if (_isGameOver)
-                continue;
 
             if (event.type == sf::Event::MouseButtonPressed) {
                 oldPos.x = event.mouseButton.x;
@@ -53,6 +51,8 @@ void Game::start() {
                 _window.setView(camera);
             }
 
+            if (_isGameOver)
+                continue;
             if (event.type == sf::Event::MouseButtonReleased) {
                 _moveCamera = false;
                 if (moved == false) {

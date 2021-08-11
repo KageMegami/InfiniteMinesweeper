@@ -83,8 +83,8 @@ void Map::draw(sf::RenderWindow &window, sf::Vector2f camera, bool over) {
 
 bool Map::reveal(sf::Vector2i chunk, sf::Vector2i coord) {
     //search for the chunked to reveal the tile in
-    int id = get_chunk_id(coord);
-    
+    int id = get_chunk_id(chunk);
+
     // chunk not found
     if (_chunks.find(id) == _chunks.end())
         return false;
@@ -97,14 +97,27 @@ bool Map::reveal(sf::Vector2i chunk, sf::Vector2i coord) {
     return _chunks[id]->reveal(coord.x, coord.y);
 }
 
+
+char Map::get_tile(sf::Vector2i chunk, sf::Vector2i coord) {
+    //search for the chunked to reveal the tile in
+    int id = get_chunk_id(chunk);
+
+    // chunk not found
+    if (_chunks.find(id) == _chunks.end())
+        return false;
+    return _chunks[id]->get_tile(coord);
+}
+
+
 bool Map::click(sf::Vector2f target,sf::Mouse::Button button)
 {
     sf::Vector2i chunk_coord, tiles_coord;
     // convert coord
     chunk_coord.x = target.x < 0 ? (int)target.x / 512 - 1 : (int)target.x / 512;
     chunk_coord.y = target.y < 0 ? (int)target.y / 512 - 1 : (int)target.y / 512;
-    tiles_coord.x = (int)target.x % 512;
-    tiles_coord.y = (int)target.y % 512;
+    tiles_coord.x = target.x < 0 ? (int)target.x % 512 + 512 : (int)target.x % 512;
+    tiles_coord.y = target.y < 0 ? (int)target.y % 512 + 512 : (int)target.y % 512;
+    std::cout << tiles_coord.x << " " << tiles_coord.y << std::endl;
 
     //search for the clicked chunked
     int id = get_chunk_id(chunk_coord);
@@ -157,7 +170,8 @@ void Map::create_new_chunk(sf::Vector2i coord) {
     //create new chunk
     int new_id = _ids.size();
 
-    _chunks.emplace(new_id, new Chunk(0, coord, [&](sf::Vector2i chunk, sf::Vector2i coord2){return Map::reveal(chunk, coord2);}));
+    _chunks.emplace(new_id, new Chunk(0, coord, [&](sf::Vector2i chunk, sf::Vector2i coord2){return this->reveal(chunk, coord2);},
+                                      [&](sf::Vector2i chunk, sf::Vector2i coord2){return this->get_tile(chunk, coord2);}));
     _ids.push_back(std::make_tuple(coord, new_id));
     
     //load the chunk's tiles in the map generator
@@ -167,15 +181,15 @@ void Map::create_new_chunk(sf::Vector2i coord) {
             load_chunk_in_generator(id, (x + 1) * 16, (y + 1) * 16);
         }
     }
-    for (int i = 0; i < 40; i += 1) {
+    for (int i = 0; i < MINE_PER_CHUNK; i += 1) {
         int x = std::rand() % 16 + 16;
         int y = std::rand() % 16 + 16;
         //if already is a mine
-        if ((_generator[x][y] & 0b00010000) != 0) {
+        if ((_generator[x][y] & MINE) != 0) {
             i -= 1;
             continue;
         }
-        _generator[x][y] |= 0b00010000;
+        _generator[x][y] |= MINE;
     }
 
     //count and update mines indicator
@@ -184,7 +198,7 @@ void Map::create_new_chunk(sf::Vector2i coord) {
             _generator[i][j] &= 0b11110000;
             for (int x = -1; x < 2; x += 1) {
                 for (int y = -1; y < 2; y += 1) {
-                    if ((_generator[x + i][y + j] & 0b00010000) != 0)
+                    if ((_generator[x + i][y + j] & MINE) != 0)
                         _generator[i][j] += 1;
                 }
             }
