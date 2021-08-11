@@ -170,7 +170,7 @@ void Map::create_new_chunk(sf::Vector2i coord) {
     //create new chunk
     int new_id = _ids.size();
 
-    _chunks.emplace(new_id, new Chunk(0, coord, [&](sf::Vector2i chunk, sf::Vector2i coord2){return this->reveal(chunk, coord2);},
+    _chunks.emplace(new_id, new Chunk(new_id, coord, [&](sf::Vector2i chunk, sf::Vector2i coord2){return this->reveal(chunk, coord2);},
                                       [&](sf::Vector2i chunk, sf::Vector2i coord2){return this->get_tile(chunk, coord2);}));
     _ids.push_back(std::make_tuple(coord, new_id));
     
@@ -211,5 +211,38 @@ void Map::create_new_chunk(sf::Vector2i coord) {
             int id = get_chunk_id(sf::Vector2i(x + coord.x, y + coord.y));
             update_tiles(id, (x + 1) * 16, (y + 1) * 16);
         }
+    }
+}
+
+void Map::save(std::ofstream &file)
+{
+    int size = _ids.size();
+    file.write ((char*)&size, 4);
+
+    for (auto it = _ids.begin(); it != _ids.end(); ++it) {
+        file.write((char*)&(std::get<0>(*it).x), 4);
+        file.write((char*)&(std::get<0>(*it).y), 4);
+    }
+    for (auto it = _chunks.begin(); it != _chunks.end(); it++) {
+        file.write((char*)(*it).second->_tiles, 256);
+    }
+}
+
+void Map::load(std::ifstream &file)
+{
+    int size;
+    int x, y;
+    file.read((char*)&size, 4);
+    _chunks.clear();
+    _ids.clear();
+    for (int i = 0; i < size; i += 1) {
+        file.read((char*)&x, 4);
+        file.read((char*)&y, 4);
+        _ids.push_back(std::make_tuple(sf::Vector2i(x, y), i));
+    }
+    for (int i = 0; i < size; i += 1) {
+        _chunks.emplace(i, new Chunk(i, std::get<0>(_ids[i]), [&](sf::Vector2i chunk, sf::Vector2i coord2){return this->reveal(chunk, coord2);},
+                        [&](sf::Vector2i chunk, sf::Vector2i coord2){return this->get_tile(chunk, coord2);}));
+        file.read((char*)_chunks[i]->_tiles, 256);
     }
 }

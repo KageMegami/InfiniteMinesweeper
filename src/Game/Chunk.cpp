@@ -6,11 +6,9 @@ std::function<bool(sf::Vector2i,sf::Vector2i)> reveal_in_chunk,
 std::function<unsigned char(sf::Vector2i,sf::Vector2i)> get_tile_in_chunk)
 : _id(id), _pos(pos), _reveal_in_chunk(reveal_in_chunk), _get_tile_in_chunk(get_tile_in_chunk)
 {
-    int i = 0;
-
     //set tiles to not reveal
-    for (int j = 0; j < 256; j += 1)
-        _tiles[j] = REVEALED;
+    for (int i = 0; i < 256; i += 1)
+        _tiles[i] = REVEALED;
 
 }
 
