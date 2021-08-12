@@ -47,9 +47,7 @@ Map::Map()
 
 Map::~Map()
 {
-}    
-
-
+}
 
 int Map::get_chunk_id(sf::Vector2i coord)
 {
@@ -181,6 +179,8 @@ void Map::create_new_chunk(sf::Vector2i coord) {
             load_chunk_in_generator(id, (x + 1) * 16, (y + 1) * 16);
         }
     }
+    if (new_id == 0)
+        return;
     for (int i = 0; i < MINE_PER_CHUNK; i += 1) {
         int x = std::rand() % 16 + 16;
         int y = std::rand() % 16 + 16;
